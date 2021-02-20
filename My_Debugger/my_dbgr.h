@@ -5,6 +5,15 @@
 
 using std::endl;
 using std::cout;
+using std::cin;
 
+extern BOOL debugger_active;
+extern DWORD pid;
+extern HANDLE h_process;
 
-void createprocess();
+void createprocess(const wchar_t*);
+HANDLE open_process();
+void attach();
+void run();
+void get_debug_event();
+bool detach();
