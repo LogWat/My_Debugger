@@ -1,8 +1,15 @@
 #include "my_dbgr.h"
 
+using std::endl;
+using std::cout;
+using std::cin;
+using std::vector;
 
 BOOL debugger_active = FALSE;
 HANDLE h_process = NULL;
+
+vector<DWORD> thread_list; // スレッドリスト
+
 
 
 void createprocess(const wchar_t* path_to_exe)
@@ -43,11 +50,12 @@ void createprocess(const wchar_t* path_to_exe)
 	CloseHandle(pi.hThread);
 }
 
-HANDLE open_process()
+inline HANDLE open_process()
 {
 	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 }
 
+// プロセスの開始************************************************
 void attach()
 {
 	h_process = open_process();
@@ -64,15 +72,11 @@ void attach()
 	}
 }
 
-
-
 void run()
 {
 	while (debugger_active)
 		get_debug_event();
 }
-
-
 
 void get_debug_event()
 {
@@ -95,6 +99,8 @@ void get_debug_event()
 	}
 }
 
+
+// プロセスの終了**********************************************
 bool detach()
 {
 	if (DebugActiveProcessStop(pid))
@@ -105,5 +111,42 @@ bool detach()
 	else {
 		cout << "There was an error" << endl;
 		return FALSE;
+	}
+}
+
+
+// ThreadIDの取得*******************************************************
+HANDLE open_thread(DWORD thread_id)
+{
+	HANDLE h_thread = OpenThread(THREAD_ALL_ACCESS, FALSE, thread_id);
+
+	if (h_thread != 0)
+	{
+		return h_thread;
+	}
+	else {
+		cout << "[*] Could not obtain a valid thread handle." << endl;
+		return FALSE;
+	}
+}
+
+void enumerate_threads()
+{
+	THREADENTRY32 entry;
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, pid);
+
+	if (snapshot != NULL)
+	{
+		entry.dwSize = sizeof(entry); // 構造体のサイズで初期化しないと失敗
+		BOOL success = Thread32First(snapshot, &entry);
+
+		while (success)
+		{
+			if (entry.th32OwnerProcessID == pid)
+				thread_list.push_back(entry.th32ThreadID);
+			success = Thread32Next(snapshot, &entry);
+		}
+
+		CloseHandle(snapshot);
 	}
 }

@@ -1,5 +1,9 @@
 ﻿#include "my_dbgr.h"
 
+using std::endl;
+using std::cout;
+using std::cin;
+
 DWORD pid = NULL;
 
 int main()
