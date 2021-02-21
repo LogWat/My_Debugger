@@ -163,4 +163,6 @@ CONTEXT get_thread_context(DWORD thread_id, HANDLE h_thread)
 		CloseHandle(h_thread);
 		return ct;
 	}
+	else
+		detach();
 }
