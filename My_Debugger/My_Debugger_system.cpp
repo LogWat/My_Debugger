@@ -11,6 +11,10 @@ HANDLE h_process = NULL;
 vector<DWORD> thread_list; // スレッドリスト
 
 
+inline HANDLE open_process()
+{
+	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+}
 
 void createprocess(const wchar_t* path_to_exe)
 {
@@ -48,11 +52,6 @@ void createprocess(const wchar_t* path_to_exe)
 
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-}
-
-inline HANDLE open_process()
-{
-	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 }
 
 // プロセスの開始************************************************
@@ -148,5 +147,20 @@ void enumerate_threads()
 		}
 
 		CloseHandle(snapshot);
+	}
+}
+
+CONTEXT get_thread_context(DWORD thread_id, HANDLE h_thread)
+{
+	CONTEXT ct;
+	ct.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
+
+	// スレッドのハンドル取得
+	if (h_thread == NULL)
+		h_thread = open_thread(thread_id);
+	if (GetThreadContext(h_thread, &ct))
+	{
+		CloseHandle(h_thread);
+		return ct;
 	}
 }
