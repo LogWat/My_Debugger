@@ -5,6 +5,7 @@ BOOL debugger_active = FALSE;
 HANDLE h_process = NULL;
 HANDLE h_thread = NULL;
 CONTEXT ct;
+PVOID exception_address = NULL;
 
 inline HANDLE open_process()
 {
@@ -85,12 +86,45 @@ void get_debug_event()
 
 		cout << "Event Code: " << de.dwDebugEventCode << " Thread ID: " << de.dwThreadId << endl;
 
+		// イベントコードが例外ならば更に調査
+		if (de.dwDebugEventCode == EXCEPTION_DEBUG_EVENT)
+		{
+			DWORD exception = de.u.Exception.ExceptionRecord.ExceptionCode;
+			exception_address = de.u.Exception.ExceptionRecord.ExceptionAddress; // PVOID型(void *)
+
+			switch (exception)
+			{
+			case EXCEPTION_ACCESS_VIOLATION:
+				cout << "Access Violation Detected." << endl;
+				break;
+
+			case EXCEPTION_BREAKPOINT:
+				continue_status = exception_handler_breakpoint();
+				break;
+
+			case EXCEPTION_GUARD_PAGE:
+				cout << "Guard Page Access Detected." << endl;
+				break;
+
+			case EXCEPTION_SINGLE_STEP:
+				cout << "Single Stepping." << endl;
+				break;
+			}
+		}
+
 		ContinueDebugEvent(
 			de.dwProcessId,
 			de.dwThreadId,
 			continue_status
 		);
 	}
+}
+
+int exception_handler_breakpoint()
+{
+	cout << "[*] Inside the breakpoint handler." << endl;
+	cout << "Exception Address : 0x" << std::hex << exception_address << endl;
+	return DBG_CONTINUE;
 }
 
 
