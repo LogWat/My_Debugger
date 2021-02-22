@@ -14,6 +14,7 @@ extern DWORD pid;
 extern HANDLE h_process;
 extern HANDLE h_thread;
 extern CONTEXT ct;
+extern PVOID exception_address;
 
 void createprocess(const wchar_t*);
 void attach();
@@ -22,3 +23,4 @@ void get_debug_event();
 bool detach();
 HANDLE open_thread(DWORD);
 CONTEXT get_thread_context(HANDLE h_thread = NULL, DWORD thread_id = NULL);
+int exception_handler_breakpoint();
