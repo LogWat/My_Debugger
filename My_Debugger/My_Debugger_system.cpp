@@ -5,10 +5,9 @@ BOOL debugger_active = FALSE;
 HANDLE h_process = NULL;
 HANDLE h_thread = NULL;
 CONTEXT ct;
-PVOID exception_address = NULL;
+PVOID exception_address = NULL;     
 
-inline HANDLE open_process()
-{
+inline HANDLE open_process() []
 	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 }
 
