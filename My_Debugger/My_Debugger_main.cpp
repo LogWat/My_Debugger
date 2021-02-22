@@ -8,7 +8,9 @@ int main()
     cout << "Enter the PID of the process to attach to :"; cin >> pid;
 
     attach();
+    
     run();
+
     detach();
 
     return 0;
