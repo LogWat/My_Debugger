@@ -1,13 +1,17 @@
 #include "my_dbgr.h"
 
+using std::map;
+
 
 BOOL debugger_active = FALSE;
 HANDLE h_process = NULL;
 HANDLE h_thread = NULL;
 CONTEXT ct;
-PVOID exception_address = NULL;     
+PVOID exception_address = NULL;
+map<LPVOID, const void*> software_breakpoints;
 
-inline HANDLE open_process() []
+inline HANDLE open_process()
+{
 	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 }
 
@@ -122,7 +126,7 @@ void get_debug_event()
 int exception_handler_breakpoint()
 {
 	cout << "[*] Inside the breakpoint handler." << endl;
-	cout << "Exception Address : 0x" << std::hex << exception_address << endl;
+	cout << "Exception Address : 0x" << hex << exception_address << endl;
 	return DBG_CONTINUE;
 }
 
@@ -171,4 +175,72 @@ CONTEXT get_thread_context(HANDLE h_thread, DWORD thread_id)
 	}
 	else
 		detach();
+}
+
+
+const void* read_process_memory(LPCVOID address, int length)
+{
+	char* read_buf = new char[length];
+
+	unsigned long count = 0;
+
+	if (!ReadProcessMemory(h_process, address, (LPVOID)read_buf, length, &count))
+	{
+		delete[] read_buf;
+		return FALSE;
+	}
+	else {
+		const char* data = read_buf;
+		delete[] read_buf;
+		return data;
+	}
+}
+
+bool write_process_memory(LPVOID address, LPCVOID data)
+{
+	unsigned long count = 0;
+	int length = sizeof(data);
+
+	if (!WriteProcessMemory(h_process, address, data, length, &count))
+		return FALSE;
+	else
+		return TRUE;
+}
+
+bool bp_set_sw(LPVOID address)
+{
+	cout << "[*] Setting breakpoint at: 0x" << hex << address << endl;
+
+	if (software_breakpoints.find(address) != software_breakpoints.end())
+	{
+		try
+		{
+			// オリジナルのバイトを保存
+			const void* original_byte = read_process_memory(address, 1);
+
+			// INT3(0xCC)のオペコードを書込み
+			write_process_memory(address, "\xCC");
+
+			//内部リストにブレークポイントを登録
+			software_breakpoints[address] = (original_byte);
+		}
+		catch (const std::exception&)
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
+{
+	HMODULE handle = GetModuleHandle(dll);
+	if (handle == NULL)
+		cout << GetLastError() << endl;
+	else
+	{
+		LPVOID address = GetProcAddress(handle, function);
+		CloseHandle(handle);
+		return address;
+	}
 }
