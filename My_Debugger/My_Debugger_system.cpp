@@ -236,7 +236,7 @@ LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
 {
 	HMODULE handle = GetModuleHandle(dll);
 	if (handle == NULL)
-		cout << GetLastError() << endl;
+		cout << "[!] Error: " << GetLastError() << endl;
 	else
 	{
 		LPVOID address = GetProcAddress(handle, function);
