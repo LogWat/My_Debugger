@@ -234,13 +234,16 @@ bool bp_set_sw(LPVOID address)
 
 LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
 {
-	HMODULE handle = GetModuleHandle(dll);
+	HMODULE handle = LoadLibrary(dll);
 	if (handle == NULL)
+	{
 		cout << "[!] Error: " << GetLastError() << endl;
+		return FALSE;
+	}
 	else
 	{
 		LPVOID address = GetProcAddress(handle, function);
-		CloseHandle(handle);
+
 		return address;
 	}
 }
