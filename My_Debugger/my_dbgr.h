@@ -29,7 +29,7 @@ bool detach();
 HANDLE open_thread(DWORD);
 CONTEXT get_thread_context(HANDLE h_thread = NULL, DWORD thread_id = NULL);
 int exception_handler_breakpoint();
-const void* read_process_memory(LPCVOID, int);
+const void* read_process_memory(LPCVOID, SIZE_T);
 bool write_process_memory(LPVOID , LPCVOID);
 bool bp_set_sw(LPVOID);
 LPVOID func_resolve(LPCWSTR, LPCSTR);

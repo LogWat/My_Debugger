@@ -61,7 +61,7 @@ void attach()
 	if (!DebugActiveProcess(pid))
 	{
 		cout << "[*] Unable to attach to the process." << endl;
-		return;
+		exit(0);
 	}
 	else {
 		debugger_active = TRUE;
@@ -178,19 +178,20 @@ CONTEXT get_thread_context(HANDLE h_thread, DWORD thread_id)
 }
 
 
-const void* read_process_memory(LPCVOID address, int length)
+const void* read_process_memory(LPCVOID address, SIZE_T length)
 {
-	char* read_buf = new char[length];
+	LPVOID read_buf = new char[length];
 
 	unsigned long count = 0;
 
-	if (!ReadProcessMemory(h_process, address, (LPVOID)read_buf, length, &count))
+	if (!ReadProcessMemory(h_process, address, read_buf, length, &count))
 	{
 		delete[] read_buf;
+		cout << "[!] Error: " << GetLastError() << endl;
 		return FALSE;
 	}
 	else {
-		const char* data = read_buf;
+		const void* data = read_buf;
 		delete[] read_buf;
 		return data;
 	}
@@ -202,7 +203,10 @@ bool write_process_memory(LPVOID address, LPCVOID data)
 	int length = sizeof(data);
 
 	if (!WriteProcessMemory(h_process, address, data, length, &count))
+	{
+		cout << "[!] Error: " << GetLastError() << endl;
 		return FALSE;
+	}
 	else
 		return TRUE;
 }
@@ -211,7 +215,9 @@ bool bp_set_sw(LPVOID address)
 {
 	cout << "[*] Setting breakpoint at: 0x" << hex << address << endl;
 
-	if (software_breakpoints.find(address) != software_breakpoints.end())
+	auto itr = software_breakpoints.find(address);
+
+	if (itr == software_breakpoints.end())
 	{
 		try
 		{
@@ -235,6 +241,7 @@ bool bp_set_sw(LPVOID address)
 LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
 {
 	HMODULE handle = LoadLibrary(dll);
+
 	if (handle == NULL)
 	{
 		cout << "[!] Error: " << GetLastError() << endl;
@@ -243,7 +250,7 @@ LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
 	else
 	{
 		LPVOID address = GetProcAddress(handle, function);
-
+		// CloseHandle(handle);
 		return address;
 	}
 }
