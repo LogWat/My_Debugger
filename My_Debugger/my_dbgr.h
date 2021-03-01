@@ -6,13 +6,6 @@
 
 #pragma once
 
-using std::endl;
-using std::cout;
-using std::cin;
-using std::vector;
-using std::string;
-using std::hex;
-
 extern BOOL debugger_active;
 extern DWORD pid;
 extern HANDLE h_process;

@@ -1,14 +1,30 @@
 #include "my_dbgr.h"
 
+using std::endl;
+using std::cout;
+using std::cin;
+using std::vector;
+using std::string;
+using std::hex;
 using std::map;
 
 
 BOOL debugger_active = FALSE;
+BOOL first_breakpoint = TRUE;
+
 HANDLE h_process = NULL;
 HANDLE h_thread = NULL;
+
 CONTEXT ct;
+
 PVOID exception_address = NULL;
+
 map<LPVOID, const void*> software_breakpoints;
+
+
+
+
+
 
 inline HANDLE open_process()
 {

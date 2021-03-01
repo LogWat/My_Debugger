@@ -1,5 +1,12 @@
 ﻿#include "my_dbgr.h"
 
+using std::endl;
+using std::cout;
+using std::cin;
+using std::vector;
+using std::string;
+using std::hex;
+
 DWORD pid = NULL;
 
 int main()
