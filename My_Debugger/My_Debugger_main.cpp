@@ -21,7 +21,7 @@ int main()
 
     cout << "[*] Address of printf: 0x" << printf_address << endl;
 
-    bp_set_sw(printf_address);
+    bp_set_hw(printf_address, 1, HW_EXECUTE);
     
     run();
 

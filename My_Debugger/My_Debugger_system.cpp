@@ -21,11 +21,6 @@ PVOID exception_address = NULL;
 
 map<LPVOID, const void*> software_breakpoints;
 
-
-
-
-
-
 inline HANDLE open_process()
 {
 	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
@@ -126,7 +121,7 @@ void get_debug_event()
 				break;
 
 			case EXCEPTION_SINGLE_STEP:
-				cout << "Single Stepping." << endl;
+				continue_status = exception_handler_single_step();
 				break;
 			}
 		}
@@ -144,6 +139,32 @@ int exception_handler_breakpoint()
 	cout << "[*] Inside the breakpoint handler." << endl;
 	cout << "Exception Address : 0x" << hex << exception_address << endl;
 	return DBG_CONTINUE;
+}
+
+int exception_handler_single_step()
+{
+	int slot;
+	int continue_status;
+	// Comment of PyDbg
+	// Check if this single step event was triggered by a hardware breakpoint and determine the breakpoint reached
+	// ...However, Windows doesn't seem to communicate the flag properly
+	if (ct.Dr6 & 0x1 && hardware_breakpoints.find(0) != hardware_breakpoints.end())
+		slot = 0;
+	else if (ct.Dr6 & 0x2 && hardware_breakpoints.find(1) != hardware_breakpoints.end())
+		slot = 1;
+	else if (ct.Dr6 & 0x4 && hardware_breakpoints.find(2) != hardware_breakpoints.end())
+		slot = 2;
+	else if (ct.Dr6 & 0x8 && hardware_breakpoints.find(3) != hardware_breakpoints.end())
+		slot = 3;
+	else
+		continue_status = DBG_EXCEPTION_NOT_HANDLED;
+
+	if ((slot >= 0 && slot <= 3) && bp_del_hw(slot))
+		continue_status = DBG_CONTINUE;
+
+	cout << "[*] Hardware breakpoint removed." << endl;
+
+	return continue_status;
 }
 
 
@@ -175,24 +196,6 @@ HANDLE open_thread(DWORD thread_id)
 		return FALSE;
 	}
 }
-
-
-CONTEXT get_thread_context(HANDLE h_thread, DWORD thread_id)
-{
-	ct.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
-
-	// スレッドのハンドル取得
-	if (h_thread == NULL)
-		h_thread = open_thread(thread_id);
-	if (GetThreadContext(h_thread, &ct))
-	{
-		CloseHandle(h_thread);
-		return ct;
-	}
-	else
-		detach();
-}
-
 
 const void* read_process_memory(LPCVOID address, SIZE_T length)
 {
@@ -227,7 +230,8 @@ bool write_process_memory(LPVOID address, LPCVOID data)
 		return TRUE;
 }
 
-bool bp_set_sw(LPVOID address)
+// software_breakpoint
+BOOL bp_set_sw(LPVOID address)
 {
 	cout << "[*] Setting breakpoint at: 0x" << hex << address << endl;
 
@@ -253,6 +257,7 @@ bool bp_set_sw(LPVOID address)
 	}
 	return TRUE;
 }
+
 
 LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
 {
