@@ -16,6 +16,11 @@ typedef struct {
 	DWORD condition;
 } hw_break_t;
 
+typedef struct {
+	SIZE_T size;
+	MEMORY_BASIC_INFORMATION mbi;
+} mem_bp;
+
 extern BOOL debugger_active;
 extern DWORD pid;
 extern HANDLE h_process;
@@ -25,6 +30,12 @@ extern PVOID exception_address;
 extern std::map<LPVOID, const void*> software_breakpoints;
 extern std::map<int, hw_break_t> hardware_breakpoints;
 extern std::vector<DWORD> thread_list;
+
+// mem_bp_sys**************************************
+extern DWORD page_size;
+extern std::vector<LPVOID> guarded_pages;
+extern std::map<LPVOID, mem_bp> memory_breakpoints;
+// ************************************************
 
 void createprocess(const wchar_t*);
 void attach();
@@ -48,3 +59,8 @@ BOOL bp_set_hw(LPVOID, SIZE_T, DWORD);
 BOOL bp_del_hw(int);
 
 LPVOID func_resolve(LPCWSTR, LPCSTR);
+
+// mem_bp_sys*******************
+void init();
+BOOL bp_set_mem(LPVOID, SIZE_T);
+// *****************************

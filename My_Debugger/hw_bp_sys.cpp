@@ -2,6 +2,8 @@
 
 using std::vector;
 using std::map;
+using std::cout;
+using std::endl;
 
 vector<DWORD> thread_list;
 map<int, hw_break_t> hardware_breakpoints;
@@ -43,7 +45,11 @@ CONTEXT get_thread_context(HANDLE h_thread, DWORD thread_id)
 		return ct;
 	}
 	else
+	{
+		cout << "[!] Error: " << GetLastError() << endl;
 		detach();
+		exit(0);
+	}
 }
 
 // hardware_breakpoint

@@ -139,9 +139,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="hard_sys.cpp" />
+    <ClCompile Include="hw_bp_sys.cpp" />
+    <ClCompile Include="mem_bp_sys.cpp" />
     <ClCompile Include="My_Debugger_main.cpp" />
     <ClCompile Include="My_Debugger_system.cpp" />
+    <ClCompile Include="sw_bp_sys.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="my_dbgr.h" />

@@ -12,6 +12,7 @@ DWORD pid = NULL;
 int main()
 {
     cout << "Enter the PID of the process to attach to :"; cin >> pid;
+    // createprocess(L"C:\\Users\\user\\Desktop\\code\\C\\test.exe");
 
     // ProcessHandleの取得
     attach();
@@ -21,7 +22,7 @@ int main()
 
     cout << "[*] Address of printf: 0x" << printf_address << endl;
 
-    bp_set_hw(printf_address, 1, HW_EXECUTE);
+    bp_set_mem(printf_address, 16);
     
     run();
 

@@ -19,8 +19,6 @@ CONTEXT ct;
 
 PVOID exception_address = NULL;
 
-map<LPVOID, const void*> software_breakpoints;
-
 inline HANDLE open_process()
 {
 	return OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
@@ -28,7 +26,7 @@ inline HANDLE open_process()
 
 void createprocess(const wchar_t* path_to_exe)
 {
-	int creation_flags = DEBUG_PROCESS; // GUI表示：CREATE_NEW_CONSOLE
+	int creation_flags = CREATE_NEW_CONSOLE; // GUI表示：CREATE_NEW_CONSOLE
 
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
@@ -72,6 +70,7 @@ void attach()
 	if (!DebugActiveProcess(pid))
 	{
 		cout << "[*] Unable to attach to the process." << endl;
+		cout << "[!] Error: " << GetLastError() << endl;
 		exit(0);
 	}
 	else {
@@ -79,7 +78,6 @@ void attach()
 		pid = int(pid);
 	}
 }
-
 
 
 void run()
@@ -93,7 +91,7 @@ void get_debug_event()
 	DEBUG_EVENT de;
 	int continue_status = DBG_CONTINUE;
 
-	if (WaitForDebugEvent(&de, INFINITE))
+		if (WaitForDebugEvent(&de, INFINITE))
 	{
 		h_thread = open_thread(de.dwThreadId);
 		ct = get_thread_context(h_thread);
@@ -143,7 +141,7 @@ int exception_handler_breakpoint()
 
 int exception_handler_single_step()
 {
-	int slot;
+	static int slot;
 	int continue_status;
 	// Comment of PyDbg
 	// Check if this single step event was triggered by a hardware breakpoint and determine the breakpoint reached
@@ -196,68 +194,6 @@ HANDLE open_thread(DWORD thread_id)
 		return FALSE;
 	}
 }
-
-const void* read_process_memory(LPCVOID address, SIZE_T length)
-{
-	LPVOID read_buf = new char[length];
-
-	unsigned long count = 0;
-
-	if (!ReadProcessMemory(h_process, address, read_buf, length, &count))
-	{
-		delete[] read_buf;
-		cout << "[!] Error: " << GetLastError() << endl;
-		return FALSE;
-	}
-	else {
-		const void* data = read_buf;
-		delete[] read_buf;
-		return data;
-	}
-}
-
-bool write_process_memory(LPVOID address, LPCVOID data)
-{
-	unsigned long count = 0;
-	int length = sizeof(data);
-
-	if (!WriteProcessMemory(h_process, address, data, length, &count))
-	{
-		cout << "[!] Error: " << GetLastError() << endl;
-		return FALSE;
-	}
-	else
-		return TRUE;
-}
-
-// software_breakpoint
-BOOL bp_set_sw(LPVOID address)
-{
-	cout << "[*] Setting breakpoint at: 0x" << hex << address << endl;
-
-	auto itr = software_breakpoints.find(address);
-
-	if (itr == software_breakpoints.end())
-	{
-		try
-		{
-			// オリジナルのバイトを保存
-			const void* original_byte = read_process_memory(address, 1);
-
-			// INT3(0xCC)のオペコードを書込み
-			write_process_memory(address, "\xCC");
-
-			//内部リストにブレークポイントを登録
-			software_breakpoints[address] = (original_byte);
-		}
-		catch (const std::exception&)
-		{
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
 
 LPVOID func_resolve(LPCWSTR dll, LPCSTR function)
 {

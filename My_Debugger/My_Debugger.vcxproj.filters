@@ -26,7 +26,13 @@
     <ClCompile Include="My_Debugger_system.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="hard_sys.cpp">
+    <ClCompile Include="hw_bp_sys.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="sw_bp_sys.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="mem_bp_sys.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
